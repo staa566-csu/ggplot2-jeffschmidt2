@@ -1,0 +1,77 @@
+---
+title: "STAA 566 - Assignment 1"
+author: "Jeffrey Schmidt"
+date: "2022-09-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#Load Packages and Set Working Directory
+
+library("ggplot2")
+library("dplyr")
+library("viridis")
+library("geomtextpath")
+library("ggrepel")
+setwd("C:/Users/jschm/OneDrive/Desktop/Subterm 1/STAA 566 - Data Visualization")
+renew_df<-read.csv("Renewable electricity output_G7.csv")
+renew_df<-read.csv("Renewable electricity output_G7.csv")
+```
+
+
+```{r}
+
+#filter our regions that overlap with European Union
+renew_df<-renew_df%>%filter(Country != "Italy")%>%
+  filter(Country != "Germany")%>%
+  filter(Country != "France")
+
+#create initial plot
+renew_plot<-ggplot(data = renew_df, mapping = aes(x = Year,
+                          y = Renew, color = Country))
+
+#add in aesthetics
+renew_plot<-renew_plot+
+  geom_line()+
+  theme_classic()+
+  ggtitle("Renewable electricity output by G7 Region",subtitle = "(as % of total region electricity output)")+
+  ylab("% of total country output")+
+  xlab("Years")+
+  theme(legend.position = "none")+
+  theme(axis.title = element_text(size = 11))+
+  labs(caption = "Source: World Bank. Note: Italy, Germany and France included as part of European Union")+
+  theme(plot.caption = element_text(hjust = .5))
+
+#add in labels
+# find end of lines
+line_ends <- ggplot_build(renew_plot)$data[[1]] %>% 
+  group_by() %>% 
+  filter(x==max(x))
+#add continent label
+line_ends$Country <- renew_df %>% pull(Country) %>% 
+  unique() %>% 
+  as.character() %>% 
+  sort()
+# add direct labels to graph
+renew_plot <- renew_plot +  ggrepel::geom_label_repel(data = line_ends, 
+                         aes(x = line_ends$x, y = line_ends$y, 
+                             label = Country), 
+                         nudge_x = 100,
+                         label.size=NA,
+                         fill = alpha(c("white"),0))
+
+renew_plot
+
+pdf("Renewable_Energy.pdf", height=4, width=6)
+print(renew_plot)
+dev.off()
+```
+
+
+
+
